@@ -1,0 +1,13 @@
+[project]
+name = "in-back"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.121.1",
+    "pydantic>=2.12.4",
+    "pydantic-settings>=2.12.0",
+    "ruff>=0.14.4",
+    "uvicorn>=0.38.0",
+]
