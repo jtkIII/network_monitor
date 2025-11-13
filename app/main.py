@@ -1,9 +1,9 @@
-# app/main.py
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
-from app.routes import connections, bots, summary
-from app.core.config import settings
 
+from app.routes import bots, connects, summary
+from app.core.config import settings
+from app.services import netstats
 
 @asynccontextmanager  # Lifespan context replaces deprecated on_event
 async def lifespan(app: FastAPI):
@@ -20,21 +20,37 @@ async def lifespan(app: FastAPI):
     if settings.debug:
         print("Shutting down Network Monitor API")
 
-app = FastAPI(title="Network Monitor API", version="1.0", lifespan=lifespan)
 
-app.include_router(
-    connections.router, prefix="/api/v1/connections", tags=["connections"]
-)
+app = FastAPI(title="Ingentx Network Monitor API", version="1.0", lifespan=lifespan)
+@app.middleware("http")
+
+async def log_requests(request: Request, call_next):
+    if request.client is None:
+        print("Warning: request.client is None, cannot determine client IP.")
+        ip = "unknown"
+    else:
+        ip = request.client.host
+    ua = request.headers.get("user-agent", "")
+    path = request.url.path
+    netstats.log_request(ip, ua, path)
+    response = await call_next(request)
+    return response
+
+app.include_router(connects.router, prefix="/api/v1/connects", tags=["connects"])
 app.include_router(bots.router, prefix="/api/v1/bots", tags=["bots"])
 app.include_router(summary.router, prefix="/api/v1/summary", tags=["summary"])
 
-@app.get("/", summary="API root")
+@app.get(
+    "/",
+    summary="API root",
+    description="Ingentx Network Monitor API status, endpoints, and debug status."
+)
 async def root():
     return {
         "message": "Ingentx Network Monitor API",
         "version": app.version,
         "debug": settings.debug,
-        "total_connections_endpoint": "/api/v1/connections/",
+        "total_connections_endpoint": "/api/v1/connects/",
         "bots_endpoint": "/api/v1/bots/",
         "summary_endpoint": "/api/v1/summary/",
     }

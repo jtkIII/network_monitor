@@ -1,6 +1,12 @@
 import subprocess
-from typing import List, Dict
 from collections import defaultdict
+from typing import Dict, List
+
+WEB_PORTS = [80, 443]
+BOT_UA_KEYWORDS = ["bot", "crawl", "spider", "scrapy", "python-requests", "ai", "curl"]
+
+# stores last N requests per IP + user-agent
+_request_log: Dict[str, List[Dict]] = defaultdict(list)
 
 
 def get_tcp_connections() -> List[Dict]:
@@ -37,18 +43,10 @@ def get_tcp_connections() -> List[Dict]:
     return connections
 
 
-WEB_PORTS = [80, 443]
-
-
 def get_web_connections(connections=None) -> List[Dict]:
     if connections is None:
         connections = get_tcp_connections()
     return [c for c in connections if c["local_port"] in WEB_PORTS]
-
-
-# Will store last N requests per IP + user-agent
-_request_log: Dict[str, List[Dict]] = defaultdict(list)
-BOT_UA_KEYWORDS = ["bot", "crawl", "spider", "scrapy", "python-requests"]
 
 
 def log_request(ip: str, user_agent: str, path: str):

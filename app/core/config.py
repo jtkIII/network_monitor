@@ -13,7 +13,6 @@ class Settings(BaseSettings):
     port: int = Field(8000, validation_alias="PORT")
     cache_ttl_seconds: int = Field(5, validation_alias="CACHE_TTL_SECONDS")
 
-    # ALLOWED_IPS stored raw from .env
     allowed_ips_raw: Optional[str] = Field(None, validation_alias="ALLOWED_IPS")
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
