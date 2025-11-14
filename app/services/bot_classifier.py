@@ -3,7 +3,7 @@
 from functools import lru_cache
 
 # IMPORT YOUR USER_AGENTS DICT (you already defined it)
-from app.data.user_agents import USER_AGENTS
+from app.data.agents import USER_AGENTS
 
 
 # -------------------------

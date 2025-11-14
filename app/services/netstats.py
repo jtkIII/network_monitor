@@ -2,23 +2,23 @@ import subprocess
 from collections import defaultdict
 from typing import Dict, List
 
-WEB_PORTS = [80, 443]
-BOT_UA_KEYWORDS = ["bot", "crawl", "spider", "scrapy", "python-requests", "ai", "curl", "wget", "httpclient", "libwww"]
+from app.data.agents import BOT_UA_KEYWORDS
 
-# stores last N requests per IP + user-agent
-_request_log: Dict[str, List[Dict]] = defaultdict(list)
+WEB_PORTS = [80, 443]
+
+
+request_log: Dict[str, List[Dict]] = defaultdict(list)
 
 
 def get_tcp_connections() -> List[Dict]:
     """
     Returns a list of TCP connections:
-    {
-        local_ip, local_port, remote_ip, remote_port, state
-    }
+    { local_ip, local_port, remote_ip, remote_port, state }
     """
     result = subprocess.run(["ss", "-tn"], capture_output=True, text=True)
-    lines = result.stdout.strip().split("\n")[1:]  # skip header
+    lines: list = result.stdout.strip().split("\n")[1:]  # skip header
     connections: List[Dict] = []
+
     for line in lines:
         parts = line.split()
         if len(parts) < 5:
@@ -53,20 +53,21 @@ def log_bot_request(ip: str, user_agent: str, path: str):
     """
     Call this in FastAPI middleware for bot requests
     """
-    _request_log[ip].append({"user_agent": user_agent, "path": path})
+    print("Logging bot request:", ip, user_agent, path)
+    request_log[ip].append({"user_agent": user_agent, "path": path})
     # Optional: limit history per IP
-    if len(_request_log[ip]) > 1000:
-        _request_log[ip] = _request_log[ip][-1000:]
+    if len(request_log[ip]) > 1000:
+        request_log[ip] = request_log[ip][-1000:]
 
 
 def log_request(ip: str, user_agent: str, path: str):
     """
     Call this in FastAPI middleware
     """
-    _request_log[ip].append({"user_agent": user_agent, "path": path})
+    request_log[ip].append({"user_agent": user_agent, "path": path})
     # Optional: limit history per IP
-    if len(_request_log[ip]) > 1000:
-        _request_log[ip] = _request_log[ip][-1000:]
+    if len(request_log[ip]) > 1000:
+        request_log[ip] = request_log[ip][-1000:]
 
 
 def get_bot_stats() -> Dict[str, int]:
@@ -74,11 +75,11 @@ def get_bot_stats() -> Dict[str, int]:
     Returns a dict: {ip: bot_request_count}
     """
     bot_counts = {}
-    for ip, entries in _request_log.items():
+    for ip, entries in request_log.items():
         bot_counts[ip] = sum(
             1
             for e in entries
-            if any(k in e["user_agent"].lower() for k in BOT_UA_KEYWORDS)
+            if any(k in str(e.get("user_agent", "")).lower() for k in BOT_UA_KEYWORDS)
         )
     return bot_counts
 
@@ -87,4 +88,4 @@ def get_total_web_requests() -> int:
     """
     Total number of web requests logged
     """
-    return sum(len(entries) for entries in _request_log.values())
+    return sum(len(entries) for entries in request_log.values())

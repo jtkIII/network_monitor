@@ -25,7 +25,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Ingentx Network Monitor API", version="1.0", lifespan=lifespan)
 
 @app.middleware("http")
-async def log_requests(request: Request, call_next):
+async def request_middleware(request: Request, call_next):
     if request.client is None:
         print("Warning: request.client is None, cannot determine client IP.")
         ip = "unknown"
@@ -33,19 +33,21 @@ async def log_requests(request: Request, call_next):
         ip = request.client.host
     ua = request.headers.get("user-agent", "")
     path = request.url.path
-    netstats.log_request(ip, ua, path)
-    response = await call_next(request)
-    return response
 
-async def classify_request(request: Request, call_next):
-    ua = request.headers.get("user-agent", "")
+    # log basic request info
+    netstats.log_request(ip, ua, path)
+
+    # classify UA and log bot info (use .get to avoid KeyError if classifier changes)
     bot_info = classify_user_agent(ua)
     netstats.log_bot_request(
-        bot_info['raw_user_agent'], bot_info["is_bot"], bot_info["vendor"]
+        bot_info.get('raw_user_agent', ua),
+        bot_info.get("is_bot", False),
+        bot_info.get("vendor", "")
     )
 
     response = await call_next(request)
     return response
+
 
 app.include_router(connects.router, prefix="/api/v1/connects", tags=["connects"])
 app.include_router(bots.router, prefix="/api/v1/bots", tags=["bots"])

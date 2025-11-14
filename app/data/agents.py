@@ -1,4 +1,3 @@
-
 USER_AGENTS = {
     "Google": [
         "googlebot",
@@ -110,3 +109,18 @@ USER_AGENTS = {
         "yak",
     ],
 }
+
+BOT_UA_KEYWORDS = [
+    "bot",
+    "crawl",
+    "spider",
+    "scrapy",
+    "python-requests",
+    "ai",
+    "curl",
+    "wget",
+    "httpclient",
+    "libwww",
+    "java",
+    "go-http-client",
+]
