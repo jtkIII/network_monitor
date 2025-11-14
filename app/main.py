@@ -40,12 +40,9 @@ async def log_requests(request: Request, call_next):
 async def classify_request(request: Request, call_next):
     ua = request.headers.get("user-agent", "")
     bot_info = classify_user_agent(ua)
-
-    
-
-    # Example logging:
-    # save bot_info["vendor"], bot_info["is_bot"], IP, path, etc.
-    # (You'll attach this to your in-memory log or Redis)
+    netstats.log_bot_request(
+        bot_info['raw_user_agent'], bot_info["is_bot"], bot_info["vendor"]
+    )
 
     response = await call_next(request)
     return response

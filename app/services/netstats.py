@@ -49,6 +49,16 @@ def get_web_connections(connections=None) -> List[Dict]:
     return [c for c in connections if c["local_port"] in WEB_PORTS]
 
 
+def log_bot_request(ip: str, user_agent: str, path: str):
+    """
+    Call this in FastAPI middleware for bot requests
+    """
+    _request_log[ip].append({"user_agent": user_agent, "path": path})
+    # Optional: limit history per IP
+    if len(_request_log[ip]) > 1000:
+        _request_log[ip] = _request_log[ip][-1000:]
+
+
 def log_request(ip: str, user_agent: str, path: str):
     """
     Call this in FastAPI middleware
