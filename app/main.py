@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from app.routes import bots, connects, summary
 from app.core.config import settings
 from app.services import netstats
+from app.services.bot_classifier import classify_user_agent
 
 @asynccontextmanager  # Lifespan context replaces deprecated on_event
 async def lifespan(app: FastAPI):
@@ -22,8 +23,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Ingentx Network Monitor API", version="1.0", lifespan=lifespan)
-@app.middleware("http")
 
+@app.middleware("http")
 async def log_requests(request: Request, call_next):
     if request.client is None:
         print("Warning: request.client is None, cannot determine client IP.")
@@ -33,6 +34,19 @@ async def log_requests(request: Request, call_next):
     ua = request.headers.get("user-agent", "")
     path = request.url.path
     netstats.log_request(ip, ua, path)
+    response = await call_next(request)
+    return response
+
+async def classify_request(request: Request, call_next):
+    ua = request.headers.get("user-agent", "")
+    bot_info = classify_user_agent(ua)
+
+    
+
+    # Example logging:
+    # save bot_info["vendor"], bot_info["is_bot"], IP, path, etc.
+    # (You'll attach this to your in-memory log or Redis)
+
     response = await call_next(request)
     return response
 

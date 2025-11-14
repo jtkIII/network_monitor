@@ -12,3 +12,4 @@ async def get_bot_stats() -> dict[str, int]:
     bots = int(total * random.uniform(0.1, 0.3))
     legit = total - bots
     return {"total": total, "bots": bots, "legit": legit}
+

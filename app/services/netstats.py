@@ -3,7 +3,7 @@ from collections import defaultdict
 from typing import Dict, List
 
 WEB_PORTS = [80, 443]
-BOT_UA_KEYWORDS = ["bot", "crawl", "spider", "scrapy", "python-requests", "ai", "curl"]
+BOT_UA_KEYWORDS = ["bot", "crawl", "spider", "scrapy", "python-requests", "ai", "curl", "wget", "httpclient", "libwww"]
 
 # stores last N requests per IP + user-agent
 _request_log: Dict[str, List[Dict]] = defaultdict(list)
